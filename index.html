@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Algoritma & Pemrograman — SMP Negeri 1 Sugio</title>
+<style>
+  :root{
+    --blue:#0B72E7; --blue-dark:#0A3D91; --blue-soft:#5FB6FF;
+    --purple:#6C5CE7; --orange:#F5A524; --green:#12B886; --red:#E5484D;
+    --yellow:#FDCB4E; --ink:#122A4E; --ink-soft:#3E5578;
+    --card:#ffffff; --font-scale:1.0;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;padding:0;overflow:hidden;
+    font-family:'Trebuchet MS','Segoe UI',Verdana,sans-serif; color:var(--ink);}
+  body{
+    background: url('bg-ruang-kelas.jpg') center/cover no-repeat fixed, #f0f9ff;
+  }
+  .bg-overlay{position:fixed;inset:0;background:rgba(240,249,255,0.82);z-index:0;}
+  .stage-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;}
+  #stage-16-9{
+    position:relative;
+    width:min(100vw, 177.78vh);
+    height:min(100vh, 56.25vw);
+    aspect-ratio:16/9;
+    background:transparent;border:none;box-shadow:none;border-radius:0;
+    overflow:hidden;
+    font-size:calc(15px * var(--font-scale,1.0));
+  }
+  .page{position:absolute;inset:0;display:none;flex-direction:column;
+    padding:clamp(10px,1.8vh,18px);overflow:hidden;}
+  .page.active{display:flex;}
+
+  /* ===== Top Nav (reused on pages 2-7) ===== */
+  .topnav{display:flex;align-items:center;justify-content:space-between;
+    gap:8px; margin-bottom:clamp(8px,1.4vh,14px); flex:0 0 auto;}
+  .topnav-left{display:flex;align-items:center;gap:8px;}
+  .titlebar{font-size:clamp(16px,2.2vh,22px);font-weight:800;color:#fff;
+    padding:8px 22px;border-radius:999px;
+    background:linear-gradient(120deg,var(--blue),var(--purple));
+    box-shadow:0 4px 10px rgba(20,50,100,.25);white-space:nowrap;}
+  .topnav-right{display:flex;align-items:center;gap:6px;}
+  .nav-btn{width:clamp(40px,5.2vh,48px);height:clamp(40px,5.2vh,48px);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(18px,2.3vh,23px);border:none;cursor:pointer;
+    background:#fff;color:var(--blue-dark);box-shadow:0 4px 8px rgba(20,50,100,.2);
+    transition:transform .15s ease;}
+  .nav-btn:hover{transform:scale(1.08);}
+  .nav-btn.home{background:linear-gradient(135deg,var(--orange),#ffb84d);color:#fff;}
+  .font-ctrl{display:flex;align-items:center;gap:4px;background:#fff;border-radius:999px;
+    padding:4px 8px;box-shadow:0 4px 8px rgba(20,50,100,.15);}
+  .font-ctrl button{border:none;background:var(--blue-soft);color:#fff;border-radius:50%;
+    width:26px;height:26px;font-weight:800;cursor:pointer;font-size:13px;}
+
+  /* ===== Cover ===== */
+  #page-cover{justify-content:space-between;align-items:stretch;}
+  .cover-header{display:flex;justify-content:center;flex:0 0 auto;}
+  .school-capsule{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.92);
+    padding:8px 26px 8px 12px;border-radius:999px;box-shadow:0 6px 16px rgba(20,50,100,.25);}
+  .logo-img{height:clamp(50px,6.8vh,68px);display:block;}
+  .school-text{display:flex;flex-direction:column;line-height:1.25;}
+  .school-text strong{font-size:clamp(13px,1.7vh,17px);color:var(--blue-dark);}
+  .school-text span{font-size:clamp(10px,1.25vh,12.5px);color:var(--ink-soft);font-weight:600;}
+  .cover-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,1.6vh,16px);text-align:center;}
+  .cover-title{font-size:clamp(2.8rem,6.8vw,5.2rem);font-weight:900;color:#fff;line-height:1.05;
+    text-shadow: -3px -3px 0 #fff, 3px -3px 0 #fff, -3px 3px 0 #fff, 3px 3px 0 #fff,
+      0 8px 0 var(--blue-dark), 0 14px 18px rgba(10,40,90,.35);
+    max-width:92%;}
+  .cover-sub{font-size:clamp(1.4rem,3.2vw,2.6rem);font-weight:700;color:var(--blue-dark);
+    background:rgba(255,255,255,.85);padding:4px 22px;border-radius:999px;}
+  .play-btn{border:none;background:transparent;cursor:pointer;display:flex;flex-direction:column;
+    align-items:center;gap:6px;margin-top:6px;}
+  .play-btn-circle{width:clamp(60px,8.5vh,80px);height:clamp(60px,8.5vh,80px);border-radius:50%;
+    background:linear-gradient(135deg,var(--orange),#ff7a59);display:flex;align-items:center;
+    justify-content:center;color:#fff;font-size:clamp(26px,3.6vh,36px);
+    box-shadow:0 0 0 0 rgba(245,165,36,.6);animation:pulseGlow 1.8s infinite;}
+  @keyframes pulseGlow{
+    0%{box-shadow:0 0 0 0 rgba(245,165,36,.55);}
+    70%{box-shadow:0 0 0 22px rgba(245,165,36,0);}
+    100%{box-shadow:0 0 0 0 rgba(245,165,36,0);}
+  }
+  .play-label{font-size:clamp(24px,3.8vh,36px);font-weight:900;color:var(--blue-dark);
+    letter-spacing:1px;}
+  .cover-footer{flex:0 0 auto;text-align:center;font-size:clamp(11px,1.4vh,13.5px);
+    font-weight:700;color:var(--ink-soft);background:rgba(255,255,255,.75);
+    border-radius:14px;padding:6px 10px;}
+  .cover-footer em{color:var(--blue-dark);}
+
+  /* ===== Menu ===== */
+  .menu-grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);
+    grid-template-rows:repeat(2,1fr);gap:clamp(10px,1.6vh,18px);}
+  .menu-card{background:rgba(255,255,255,.94);border-radius:20px;padding:clamp(10px,1.6vh,16px);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    text-align:center;cursor:pointer;border:none;box-shadow:0 8px 16px rgba(20,50,100,.18);
+    transition:transform .15s ease, box-shadow .15s ease;}
+  .menu-card:hover{transform:translateY(-4px);box-shadow:0 12px 22px rgba(20,50,100,.28);}
+  .icon-box{width:clamp(66px,9vh,88px);height:clamp(66px,9vh,88px);border-radius:22px;
+    display:flex;align-items:center;justify-content:center;font-size:clamp(34px,4.8vh,46px);
+    box-shadow:0 6px 14px rgba(0,0,0,.18);}
+  .ib-1{background:linear-gradient(135deg,#6C5CE7,#a29bfe);}
+  .ib-2{background:linear-gradient(135deg,#0B72E7,#5FB6FF);}
+  .ib-3{background:linear-gradient(135deg,#12B886,#63e6be);}
+  .ib-4{background:linear-gradient(135deg,#F5A524,#ffd166);}
+  .ib-5{background:linear-gradient(135deg,#E5484D,#ff8787);}
+  .ib-6{background:linear-gradient(135deg,#FDCB4E,#ffe08a);}
+  .menu-card .card-title{font-size:clamp(15px,2vh,20px);font-weight:800;color:var(--ink);}
+  .menu-card .card-desc{font-size:clamp(11px,1.4vh,13px);font-weight:600;color:var(--ink-soft);}
+
+  /* ===== Generic card / content ===== */
+  .content-flex{flex:1;display:flex;flex-direction:column;min-height:0;}
+  .single-card{flex:1;background:rgba(255,255,255,.94);border-radius:22px;
+    padding:clamp(14px,2.2vh,26px) clamp(18px,2.8vw,34px);box-shadow:0 8px 18px rgba(20,50,100,.18);
+    display:flex;flex-direction:column;gap:clamp(6px,1.1vh,12px);min-height:0;overflow:hidden;}
+  .single-card h2{margin:0;font-size:clamp(18px,2.6vh,26px);color:var(--blue-dark);}
+  .tp-list{list-style:none;margin:0;padding:0;flex:1;display:flex;flex-direction:column;
+    justify-content:space-evenly;gap:4px;}
+  .tp-list li{display:flex;align-items:flex-start;gap:10px;font-size:clamp(13.5px,1.7vh,16px);
+    font-weight:600;line-height:1.4;}
+  .tp-bullet{flex:0 0 auto;width:clamp(26px,3.4vh,32px);height:clamp(26px,3.4vh,32px);
+    border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(12px,1.6vh,14px);}
+
+  /* ===== Materi grid ===== */
+  .materi-grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);
+    grid-template-rows:repeat(2,1fr);gap:clamp(8px,1.3vh,14px);min-height:0;}
+  .materi-card{background:rgba(255,255,255,.94);border-radius:18px;padding:clamp(8px,1.3vh,14px);
+    display:flex;flex-direction:column;gap:4px;box-shadow:0 6px 14px rgba(20,50,100,.15);
+    min-height:0;overflow:hidden;}
+  .materi-card .m-icon{font-size:clamp(24px,3.4vh,32px);}
+  .materi-card .m-title{font-size:clamp(13px,1.7vh,16.5px);font-weight:800;color:var(--blue-dark);}
+  .materi-card .m-desc{font-size:clamp(11px,1.45vh,13.5px);font-weight:600;color:var(--ink-soft);
+    line-height:1.35;overflow:hidden;}
+
+  /* ===== Simulasi ===== */
+  .sim-wrap{flex:1;background:rgba(255,255,255,.94);border-radius:22px;padding:clamp(10px,1.6vh,16px);
+    display:flex;flex-direction:column;gap:6px;box-shadow:0 8px 18px rgba(20,50,100,.18);min-height:0;}
+  .sim-controls{display:flex;align-items:center;justify-content:center;gap:12px;flex:0 0 auto;
+    flex-wrap:wrap;}
+  .sim-controls input[type=number]{width:80px;padding:8px 10px;border-radius:10px;
+    border:2px solid var(--blue-soft);font-size:clamp(13.5px,1.8vh,16px);font-weight:700;text-align:center;}
+  .btn{font-size:clamp(13.5px,1.8vh,17px);padding:10px 22px;border-radius:999px;border:none;
+    cursor:pointer;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--blue),var(--purple));
+    box-shadow:0 4px 10px rgba(20,50,100,.25);transition:transform .12s ease;}
+  .btn:hover{transform:translateY(-2px);}
+  .btn.secondary{background:linear-gradient(135deg,#8f9bb3,#c2cbdb);}
+  .svg-stage{height:clamp(230px,34vh,420px);width:100%;flex:1;min-height:0;}
+  .sim-status{flex:0 0 auto;text-align:center;font-size:clamp(12.5px,1.6vh,15px);font-weight:700;
+    color:var(--blue-dark);background:#eaf4ff;border-radius:12px;padding:6px 10px;min-height:1.6em;}
+
+  /* ===== Evaluasi ===== */
+  .eval-wrap{flex:1;display:flex;flex-direction:column;min-height:0;gap:6px;}
+  .eval-progress{flex:0 0 auto;display:flex;justify-content:center;gap:10px;}
+  .eval-dot{padding:5px 14px;border-radius:999px;font-size:clamp(11px,1.4vh,13px);font-weight:800;
+    background:#dfe7f5;color:var(--ink-soft);}
+  .eval-dot.on{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;}
+  .eval-stage{flex:1;background:rgba(255,255,255,.94);border-radius:22px;
+    padding:clamp(10px,1.6vh,18px) clamp(14px,2vw,24px);box-shadow:0 8px 18px rgba(20,50,100,.18);
+    display:none;flex-direction:column;min-height:0;gap:8px;}
+  .eval-stage.active{display:flex;}
+  .eval-q-title{font-size:clamp(14px,1.9vh,18px);font-weight:800;color:var(--blue-dark);
+    text-align:center;flex:0 0 auto;}
+  .mcq-block{flex:1;display:flex;flex-direction:column;justify-content:center;gap:6px;min-height:0;}
+  .mcq-q{font-size:clamp(13.5px,1.75vh,16.5px);font-weight:700;margin-bottom:2px;}
+  .mcq-options{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+  .opt-btn{font-size:clamp(13px,1.65vh,15.5px);padding:9px 14px;border-radius:12px;
+    border:2px solid #cfe0f7;background:#fff;cursor:pointer;font-weight:700;text-align:left;
+    transition:all .12s ease;}
+  .opt-btn:hover{border-color:var(--blue);}
+  .opt-btn.correct{background:#d3f9e8;border-color:var(--green);color:#0b7a54;}
+  .opt-btn.wrong{background:#ffe3e3;border-color:var(--red);color:#a12227;}
+  .opt-btn[disabled]{cursor:default;}
+  .mcq-set{flex:1;display:flex;flex-direction:column;justify-content:space-evenly;min-height:0;
+    overflow:hidden;}
+
+  .match-area{position:relative;flex:1;display:flex;justify-content:space-between;
+    align-items:stretch;min-height:0;padding:4px 6px;}
+  .match-col{display:flex;flex-direction:column;justify-content:space-evenly;gap:6px;width:46%;}
+  .match-btn{font-size:clamp(12px,1.55vh,14.5px);padding:8px 12px;border-radius:12px;
+    border:2px solid #cfe0f7;background:#fff;cursor:pointer;font-weight:700;text-align:center;}
+  .match-btn.sel{border-color:var(--orange);background:#fff4e0;}
+  .match-btn.done{border-color:var(--green);background:#d3f9e8;color:#0b7a54;cursor:default;}
+  .match-svg{position:absolute;inset:0;pointer-events:none;width:100%;height:100%;}
+
+  .tf-set{flex:1;display:flex;flex-direction:column;justify-content:space-evenly;min-height:0;}
+  .tf-row{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:#f4f8ff;border-radius:14px;padding:8px 14px;}
+  .tf-stmt{font-size:clamp(13px,1.7vh,16px);font-weight:700;flex:1;}
+  .tf-btns{display:flex;gap:6px;flex:0 0 auto;}
+  .tf-btn{border:none;border-radius:10px;padding:7px 14px;font-weight:800;cursor:pointer;
+    font-size:clamp(12px,1.6vh,14.5px);color:#fff;}
+  .tf-btn.b{background:var(--green);}
+  .tf-btn.s{background:var(--red);}
+  .tf-btn[disabled]{opacity:.55;cursor:default;}
+
+  .recap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;}
+  .trophy{font-size:clamp(44px,6vh,60px);filter:drop-shadow(0 4px 6px rgba(0,0,0,.25));
+    animation:bounce 1.4s infinite;}
+  @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);}}
+  .recap-score{font-size:clamp(2rem,5vh,3.4rem);font-weight:900;color:var(--blue-dark);}
+  .recap-breakdown{display:flex;gap:14px;font-size:clamp(12px,1.6vh,14.5px);font-weight:700;
+    color:var(--ink-soft);}
+  .eval-nav{flex:0 0 auto;display:flex;justify-content:center;gap:10px;margin-top:4px;}
+
+  /* ===== Profil Guru ===== */
+  .profil-card{flex:1;background:rgba(255,255,255,.94);border-radius:22px;
+    display:flex;align-items:center;gap:clamp(16px,3vw,36px);padding:clamp(12px,2vh,22px) clamp(20px,3vw,40px);
+    box-shadow:0 8px 18px rgba(20,50,100,.18);}
+  .teacher-photo-wrap{flex:0 0 auto;padding:5px;border-radius:50%;
+    background:linear-gradient(135deg,var(--blue),var(--purple),var(--orange));
+    box-shadow:0 10px 22px rgba(20,50,100,.3);}
+  .teacher-photo{width:clamp(130px,18vh,175px);height:clamp(130px,18vh,175px);border-radius:50%;
+    object-fit:cover;display:block;border:4px solid #fff;}
+  .profil-text{display:flex;flex-direction:column;gap:6px;}
+  .profil-text .p-name{font-size:clamp(20px,2.6vh,24px);font-weight:900;color:var(--blue-dark);}
+  .profil-text .p-role{font-size:clamp(13px,1.65vh,15px);font-weight:700;color:var(--ink-soft);}
+  .profil-text .p-quote{margin-top:8px;font-size:clamp(13px,1.65vh,15.5px);font-weight:600;
+    font-style:italic;color:var(--ink);background:#eef4ff;border-left:4px solid var(--blue);
+    padding:8px 12px;border-radius:8px;max-width:520px;}
+
+  /* ===== Modal Wawasan ===== */
+  .modal{position:absolute;inset:0;background:rgba(10,30,60,.55);display:none;
+    align-items:center;justify-content:center;z-index:20;}
+  .modal.active{display:flex;}
+  .modal-box{background:#fff;border-radius:22px;padding:clamp(16px,2.4vh,26px) clamp(20px,3vw,34px);
+    max-width:80%;box-shadow:0 16px 34px rgba(0,0,0,.35);position:relative;}
+  .modal-box h3{margin:0 0 10px;color:var(--blue-dark);font-size:clamp(16px,2.2vh,21px);}
+  .modal-box ul{margin:0;padding-left:18px;font-size:clamp(12.5px,1.65vh,15px);font-weight:600;
+    line-height:1.5;}
+  .modal-close{position:absolute;top:10px;right:12px;border:none;background:var(--red);color:#fff;
+    width:28px;height:28px;border-radius:50%;cursor:pointer;font-weight:800;}
+
+  @media (prefers-reduced-motion: reduce){
+    .play-btn-circle,.trophy{animation:none;}
+  }
+</style>
+</head>
+<body>
+<div class="bg-overlay"></div>
+<div class="stage-wrap">
+<div id="stage-16-9">
+
+  <!-- ===================== PAGE 1: COVER ===================== -->
+  <section id="page-cover" class="page active">
+    <div class="cover-header">
+      <div class="school-capsule">
+        <img class="logo-img" src="LOGO_SMP_N_1_SUGIO.png" alt="Logo Sekolah" onerror="this.style.display='none'">
+        <div class="school-text">
+          <strong>SMP NEGERI 1 SUGIO</strong>
+          <span>Dinas Pendidikan • Kurikulum Merdeka • Fase D</span>
+        </div>
+      </div>
+    </div>
+    <div class="cover-center">
+      <div class="cover-title">Algoritma &amp; Pemrograman</div>
+      <div class="cover-sub">Informatika — Kelas VII</div>
+      <button class="play-btn" onclick="playClick();goTo('menu')">
+        <span class="play-btn-circle">▶</span>
+        <span class="play-label">MULAI</span>
+      </button>
+    </div>
+    <div class="cover-footer">
+      Disusun oleh <strong>Muflichia Indri Khanifiana, S.Pd</strong> — SMP Negeri 1 Sugio<br>
+      <em>"Berpikir runtut, belajar hebat!"</em>
+    </div>
+  </section>
+
+  <!-- ===================== PAGE 2: MENU ===================== -->
+  <section id="page-menu" class="page">
+    <div class="topnav">
+      <div class="topnav-left">
+        <button class="nav-btn home" onclick="playClick();goTo('cover')" title="Beranda">🏠</button>
+        <div class="titlebar">Menu Utama</div>
+      </div>
+      <div class="topnav-right">
+        <div class="font-ctrl">
+          <button onclick="changeFont(-0.05)">A-</button>
+          <button onclick="changeFont(0.05)">A+</button>
+        </div>
+        <button class="nav-btn" id="soundBtn" onclick="toggleSound()" title="Suara">🔊</button>
+      </div>
+    </div>
+    <div class="menu-grid">
+      <button class="menu-card" onclick="playClick();goTo('tujuan')">
+        <div class="icon-box ib-1">🎯</div>
+        <div class="card-title">Tujuan Pembelajaran</div>
+        <div class="card-desc">Capaian &amp; indikator kompetensi siswa</div>
+      </button>
+      <button class="menu-card" onclick="playClick();goTo('materi')">
+        <div class="icon-box ib-2">📖</div>
+        <div class="card-title">Materi Pembelajaran</div>
+        <div class="card-desc">Eksplorasi konsep kunci algoritma</div>
+      </button>
+      <button class="menu-card" onclick="playClick();goTo('simulasi')">
+        <div class="icon-box ib-3">🕹️</div>
+        <div class="card-title">Simulasi Interaktif</div>
+        <div class="card-desc">Laboratorium alur logika program</div>
+      </button>
+      <button class="menu-card" onclick="playClick();goTo('evaluasi')">
+        <div class="icon-box ib-4">📝</div>
+        <div class="card-title">Evaluasi</div>
+        <div class="card-desc">3 jenis instrumen, total 100 poin</div>
+      </button>
+      <button class="menu-card" onclick="playClick();goTo('profil')">
+        <div class="icon-box ib-5">👨‍🏫</div>
+        <div class="card-title">Profil Guru</div>
+        <div class="card-desc">Informasi fasilitator pembelajaran</div>
+      </button>
+      <button class="menu-card" onclick="playClick();openModal()">
+        <div class="icon-box ib-6">💡</div>
+        <div class="card-title">Wawasan &amp; Fakta</div>
+        <div class="card-desc">Fakta menarik seputar algoritma</div>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===================== PAGE 3: TUJUAN ===================== -->
+  <section id="page-tujuan" class="page">
+    <div class="topnav">
+      <div class="topnav-left">
+        <button class="nav-btn home" onclick="playClick();goTo('cover')">🏠</button>
+        <button class="nav-btn" onclick="playClick();goTo('menu')">▦</button>
+        <div class="titlebar">Tujuan Pembelajaran</div>
+      </div>
+      <div class="topnav-right">
+        <div class="font-ctrl"><button onclick="changeFont(-0.05)">A-</button><button onclick="changeFont(0.05)">A+</button></div>
+        <button class="nav-btn" onclick="toggleSound()" id="soundBtn2">🔊</button>
+      </div>
+    </div>
+    <div class="content-flex">
+      <div class="single-card">
+        <h2>Setelah mempelajari unit ini, peserta didik mampu:</h2>
+        <ul class="tp-list">
+          <li><span class="tp-bullet">1</span> Menjelaskan pengertian algoritma dan ciri-ciri instruksi yang terstruktur dengan bahasa sendiri.</li>
+          <li><span class="tp-bullet">2</span> Menyusun urutan instruksi sederhana menjadi sebuah algoritma sekuensial yang logis.</li>
+          <li><span class="tp-bullet">3</span> Mengidentifikasi struktur percabangan (decision) untuk memilih langkah berdasarkan suatu kondisi.</li>
+          <li><span class="tp-bullet">4</span> Menjelaskan fungsi struktur perulangan (loop) dalam menyelesaikan masalah berulang.</li>
+          <li><span class="tp-bullet">5</span> Membaca dan menerapkan diagram alir (flowchart) sederhana untuk memecahkan masalah sehari-hari maupun pemrograman dasar.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PAGE 4: MATERI ===================== -->
+  <section id="page-materi" class="page">
+    <div class="topnav">
+      <div class="topnav-left">
+        <button class="nav-btn home" onclick="playClick();goTo('cover')">🏠</button>
+        <button class="nav-btn" onclick="playClick();goTo('menu')">▦</button>
+        <div class="titlebar">Materi Pembelajaran</div>
+      </div>
+      <div class="topnav-right">
+        <div class="font-ctrl"><button onclick="changeFont(-0.05)">A-</button><button onclick="changeFont(0.05)">A+</button></div>
+        <button class="nav-btn" onclick="toggleSound()" id="soundBtn3">🔊</button>
+      </div>
+    </div>
+    <div class="materi-grid">
+      <div class="materi-card">
+        <div class="m-icon">🧩</div>
+        <div class="m-title">Apa itu Algoritma?</div>
+        <div class="m-desc">Urutan langkah logis dan sistematis untuk menyelesaikan suatu masalah, mulai dari input hingga menghasilkan output yang tepat.</div>
+      </div>
+      <div class="materi-card">
+        <div class="m-icon">➡️</div>
+        <div class="m-title">Struktur Sekuensial</div>
+        <div class="m-desc">Instruksi dijalankan berurutan dari atas ke bawah, satu per satu, tanpa ada langkah yang dilompati.</div>
+      </div>
+      <div class="materi-card">
+        <div class="m-icon">🔀</div>
+        <div class="m-title">Struktur Percabangan</div>
+        <div class="m-desc">Program memilih salah satu jalur instruksi berdasarkan sebuah kondisi yang bernilai benar atau salah.</div>
+      </div>
+      <div class="materi-card">
+        <div class="m-icon">🔁</div>
+        <div class="m-title">Struktur Perulangan</div>
+        <div class="m-desc">Instruksi tertentu dijalankan berulang kali selama syarat yang ditentukan masih terpenuhi.</div>
+      </div>
+      <div class="materi-card">
+        <div class="m-icon">🗺️</div>
+        <div class="m-title">Diagram Alir (Flowchart)</div>
+        <div class="m-desc">Representasi visual algoritma memakai simbol standar: mulai/selesai, proses, keputusan, input/output.</div>
+      </div>
+      <div class="materi-card">
+        <div class="m-icon">💻</div>
+        <div class="m-title">Algoritma di Sekitar Kita</div>
+        <div class="m-desc">Resep masakan, rute perjalanan, hingga rutinitas pagi adalah contoh algoritma dalam kehidupan sehari-hari.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PAGE 5: SIMULASI ===================== -->
+  <section id="page-simulasi" class="page">
+    <div class="topnav">
+      <div class="topnav-left">
+        <button class="nav-btn home" onclick="playClick();goTo('cover')">🏠</button>
+        <button class="nav-btn" onclick="playClick();goTo('menu')">▦</button>
+        <div class="titlebar">Simulasi: Cek Bilangan Genap / Ganjil</div>
+      </div>
+      <div class="topnav-right">
+        <div class="font-ctrl"><button onclick="changeFont(-0.05)">A-</button><button onclick="changeFont(0.05)">A+</button></div>
+        <button class="nav-btn" onclick="toggleSound()" id="soundBtn4">🔊</button>
+      </div>
+    </div>
+    <div class="sim-wrap">
+      <div class="sim-controls">
+        <label style="font-weight:700;font-size:clamp(13px,1.7vh,15px)">Masukkan angka:</label>
+        <input type="number" id="simInput" value="7">
+        <button class="btn" onclick="runSim()">▶ Jalankan Algoritma</button>
+        <button class="btn secondary" onclick="resetSim()">↺ Ulangi</button>
+      </div>
+      <svg id="simSvg" class="svg-stage" viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="sim-status" id="simStatus">Masukkan angka lalu tekan "Jalankan Algoritma" untuk melihat alurnya.</div>
+    </div>
+  </section>
+
+  <!-- ===================== PAGE 6: EVALUASI ===================== -->
+  <section id="page-evaluasi" class="page">
+    <div class="topnav">
+      <div class="topnav-left">
+        <button class="nav-btn home" onclick="playClick();goTo('cover')">🏠</button>
+        <button class="nav-btn" onclick="playClick();goTo('menu')">▦</button>
+        <div class="titlebar">Evaluasi Multi-Format (100 Poin)</div>
+      </div>
+      <div class="topnav-right">
+        <div class="font-ctrl"><button onclick="changeFont(-0.05)">A-</button><button onclick="changeFont(0.05)">A+</button></div>
+        <button class="nav-btn" onclick="toggleSound()" id="soundBtn5">🔊</button>
+      </div>
+    </div>
+    <div class="eval-wrap">
+      <div class="eval-progress">
+        <div class="eval-dot" id="dotA">A · Pilihan Ganda (30)</div>
+        <div class="eval-dot" id="dotB">B · Menjodohkan (40)</div>
+        <div class="eval-dot" id="dotC">C · Benar/Salah (30)</div>
+        <div class="eval-dot" id="dotD">D · Rekap</div>
+      </div>
+
+      <!-- Babak A -->
+      <div class="eval-stage active" id="stageA">
+        <div class="eval-q-title">Babak A — Pilihan Ganda (10 poin / soal)</div>
+        <div class="mcq-set">
+          <div class="mcq-block">
+            <div class="mcq-q">1. Apa yang dimaksud dengan algoritma?</div>
+            <div class="mcq-options">
+              <button class="opt-btn" onclick="answerMCQ(0,this,false)">Bahasa pemrograman tertentu</button>
+              <button class="opt-btn" onclick="answerMCQ(0,this,true)">Urutan langkah logis menyelesaikan masalah</button>
+              <button class="opt-btn" onclick="answerMCQ(0,this,false)">Nama aplikasi komputer</button>
+              <button class="opt-btn" onclick="answerMCQ(0,this,false)">Jenis perangkat keras</button>
+            </div>
+          </div>
+          <div class="mcq-block">
+            <div class="mcq-q">2. Struktur kontrol yang mengulang instruksi selama syarat terpenuhi disebut...</div>
+            <div class="mcq-options">
+              <button class="opt-btn" onclick="answerMCQ(1,this,false)">Sekuensial</button>
+              <button class="opt-btn" onclick="answerMCQ(1,this,false)">Percabangan</button>
+              <button class="opt-btn" onclick="answerMCQ(1,this,true)">Perulangan</button>
+              <button class="opt-btn" onclick="answerMCQ(1,this,false)">Deklarasi</button>
+            </div>
+          </div>
+          <div class="mcq-block">
+            <div class="mcq-q">3. Simbol belah ketupat (diamond) pada flowchart menunjukkan...</div>
+            <div class="mcq-options">
+              <button class="opt-btn" onclick="answerMCQ(2,this,false)">Mulai / Selesai</button>
+              <button class="opt-btn" onclick="answerMCQ(2,this,false)">Proses</button>
+              <button class="opt-btn" onclick="answerMCQ(2,this,true)">Keputusan / Percabangan</button>
+              <button class="opt-btn" onclick="answerMCQ(2,this,false)">Input / Output</button>
+            </div>
+          </div>
+        </div>
+        <div class="eval-nav"><button class="btn" id="btnNextA" onclick="goStage('B')" disabled>Lanjut ke Babak B ➜</button></div>
+      </div>
+
+      <!-- Babak B -->
+      <div class="eval-stage" id="stageB">
+        <div class="eval-q-title">Babak B — Menjodohkan (10 poin / pasangan)</div>
+        <div class="match-area" id="matchArea">
+          <svg class="match-svg" id="matchSvg"></svg>
+          <div class="match-col" id="matchLeft"></div>
+          <div class="match-col" id="matchRight"></div>
+        </div>
+        <div class="eval-nav"><button class="btn" id="btnNextB" onclick="goStage('C')" disabled>Lanjut ke Babak C ➜</button></div>
+      </div>
+
+      <!-- Babak C -->
+      <div class="eval-stage" id="stageC">
+        <div class="eval-q-title">Babak C — Benar / Salah (10 poin / soal)</div>
+        <div class="tf-set">
+          <div class="tf-row">
+            <div class="tf-stmt">1. Algoritma yang baik harus memiliki langkah yang jelas dan berurutan.</div>
+            <div class="tf-btns">
+              <button class="tf-btn b" onclick="answerTF(0,this,true)">✓ BENAR</button>
+              <button class="tf-btn s" onclick="answerTF(0,this,false)">✗ SALAH</button>
+            </div>
+          </div>
+          <div class="tf-row">
+            <div class="tf-stmt">2. Struktur perulangan hanya bisa dijalankan tepat satu kali.</div>
+            <div class="tf-btns">
+              <button class="tf-btn b" onclick="answerTF(1,this,true)">✓ BENAR</button>
+              <button class="tf-btn s" onclick="answerTF(1,this,false)">✗ SALAH</button>
+            </div>
+          </div>
+          <div class="tf-row">
+            <div class="tf-stmt">3. Flowchart adalah representasi visual dari sebuah algoritma.</div>
+            <div class="tf-btns">
+              <button class="tf-btn b" onclick="answerTF(2,this,true)">✓ BENAR</button>
+              <button class="tf-btn s" onclick="answerTF(2,this,false)">✗ SALAH</button>
+            </div>
+          </div>
+        </div>
+        <div class="eval-nav"><button class="btn" id="btnNextC" onclick="goStage('D')" disabled>Lihat Hasil ➜</button></div>
+      </div>
+
+      <!-- Babak D -->
+      <div class="eval-stage" id="stageD">
+        <div class="recap">
+          <div class="trophy">🏆</div>
+          <div class="recap-score" id="recapScore">0 / 100</div>
+          <div class="recap-breakdown">
+            <span id="recapA">Babak A: 0/30</span>
+            <span id="recapB">Babak B: 0/40</span>
+            <span id="recapC">Babak C: 0/30</span>
+          </div>
+          <button class="btn secondary" onclick="resetEval()">↺ Ulangi Evaluasi</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PAGE 7: PROFIL GURU ===================== -->
+  <section id="page-profil" class="page">
+    <div class="topnav">
+      <div class="topnav-left">
+        <button class="nav-btn home" onclick="playClick();goTo('cover')">🏠</button>
+        <button class="nav-btn" onclick="playClick();goTo('menu')">▦</button>
+        <div class="titlebar">Profil Guru Pengembang</div>
+      </div>
+      <div class="topnav-right">
+        <div class="font-ctrl"><button onclick="changeFont(-0.05)">A-</button><button onclick="changeFont(0.05)">A+</button></div>
+        <button class="nav-btn" onclick="toggleSound()" id="soundBtn6">🔊</button>
+      </div>
+    </div>
+    <div class="content-flex">
+      <div class="profil-card">
+        <div class="teacher-photo-wrap">
+          <img class="teacher-photo" src="WhatsApp_Image_2026-09-16_at_11_29_11.jpeg" alt="Foto Guru" onerror="this.style.display='none'">
+        </div>
+        <div class="profil-text">
+          <div class="p-name">Muflichia Indri Khanifiana, S.Pd</div>
+          <div class="p-role">Guru Mata Pelajaran Informatika — SMP Negeri 1 Sugio</div>
+          <div class="p-role">Pengembang Media Pembelajaran Interaktif "Algoritma &amp; Pemrograman"</div>
+          <div class="p-quote">"Belajar algoritma adalah belajar berpikir runtut untuk menyelesaikan masalah apa pun, di dalam maupun di luar layar komputer."</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== MODAL: WAWASAN & FAKTA ===================== -->
+  <div class="modal" id="modalWawasan">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <h3>💡 Wawasan &amp; Fakta Menarik</h3>
+      <ul>
+        <li>Kata "algoritma" berasal dari nama ilmuwan Persia, Al-Khwarizmi.</li>
+        <li>Sebelum menulis kode, programmer profesional biasanya menyusun algoritma dulu di atas kertas atau flowchart.</li>
+        <li>Rute di aplikasi peta, playlist musik otomatis, dan resep masakan semuanya memakai prinsip algoritma.</li>
+        <li>Algoritma yang sama bisa ditulis dalam berbagai bahasa pemrograman, tapi logikanya tetap sama.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+  /* ============ NAVIGASI ============ */
+  function goTo(id){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+id).classList.add('active');
+  }
+  function openModal(){ document.getElementById('modalWawasan').classList.add('active'); }
+  function closeModal(){ playClick(); document.getElementById('modalWawasan').classList.remove('active'); }
+
+  /* ============ FONT SCALE ============ */
+  let fontScale = 1.0;
+  function changeFont(delta){
+    fontScale = Math.min(1.25, Math.max(0.85, fontScale + delta));
+    document.getElementById('stage-16-9').style.setProperty('--font-scale', fontScale);
+    playClick();
+  }
+
+  /* ============ AUDIO SINTETIS (Web Audio API) ============ */
+  let soundOn = true;
+  let _actx = null;
+  function actx(){ if(!_actx){ _actx = new (window.AudioContext||window.webkitAudioContext)(); } return _actx; }
+  function toggleSound(){
+    soundOn = !soundOn;
+    const icon = soundOn ? '🔊' : '🔇';
+    ['soundBtn','soundBtn2','soundBtn3','soundBtn4','soundBtn5','soundBtn6'].forEach(id=>{
+      const el = document.getElementById(id); if(el) el.textContent = icon;
+    });
+  }
+  function playTone(freq,dur,type,delay){
+    if(!soundOn) return;
+    try{
+      const c = actx();
+      const t0 = c.currentTime + (delay||0);
+      const o = c.createOscillator(); const g = c.createGain();
+      o.type = type||'sine'; o.frequency.setValueAtTime(freq,t0);
+      o.connect(g); g.connect(c.destination);
+      g.gain.setValueAtTime(0.001,t0);
+      g.gain.exponentialRampToValueAtTime(0.14,t0+0.02);
+      g.gain.exponentialRampToValueAtTime(0.001,t0+dur);
+      o.start(t0); o.stop(t0+dur+0.02);
+    }catch(e){}
+  }
+  function playClick(){
+    if(!soundOn) return;
+    try{
+      const c = actx(); const t0 = c.currentTime;
+      const o = c.createOscillator(); const g = c.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(450,t0);
+      o.frequency.exponentialRampToValueAtTime(880,t0+0.1);
+      o.connect(g); g.connect(c.destination);
+      g.gain.setValueAtTime(0.12,t0); g.gain.exponentialRampToValueAtTime(0.001,t0+0.12);
+      o.start(t0); o.stop(t0+0.13);
+    }catch(e){}
+  }
+  function playCorrect(){
+    playTone(523.25,0.22,'triangle',0);
+    playTone(659.25,0.22,'triangle',0.09);
+    playTone(783.99,0.3,'triangle',0.18);
+  }
+  function playWrong(){ playTone(150,0.35,'sawtooth',0); }
+
+  /* ============ SIMULASI FLOWCHART ============ */
+  const simSvg = document.getElementById('simSvg');
+  function pill(x,y,w,h,text,fill,stroke){
+    return '<g><rect x="'+(x-w/2)+'" y="'+(y-h/2)+'" width="'+w+'" height="'+h+'" rx="14" fill="'+fill+'" stroke="'+stroke+'" stroke-width="4"/>'+
+      '<rect x="'+(x-w/2+8)+'" y="'+(y-11)+'" width="'+(w-16)+'" height="22" rx="6" fill="white" stroke="'+stroke+'" stroke-width="1.5"/>'+
+      '<text x="'+x+'" y="'+(y+5)+'" text-anchor="middle" font-size="14" font-weight="800" fill="'+stroke+'">'+text+'</text></g>';
+  }
+  function diamond(x,y,w,h,text,fill,stroke){
+    const pts = (x)+','+(y-h/2)+' '+(x+w/2)+','+y+' '+x+','+(y+h/2)+' '+(x-w/2)+','+y;
+    return '<g><polygon points="'+pts+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="4"/>'+
+      '<rect x="'+(x-w/2+18)+'" y="'+(y-11)+'" width="'+(w-36)+'" height="22" rx="6" fill="white" stroke="'+stroke+'" stroke-width="1.5"/>'+
+      '<text x="'+x+'" y="'+(y+5)+'" text-anchor="middle" font-size="13" font-weight="800" fill="'+stroke+'">'+text+'</text></g>';
+  }
+  function arrow(id,x1,y1,x2,y2){
+    return '<path id="'+id+'" d="M'+x1+' '+y1+' L'+x2+' '+y2+'" stroke="#8f9bb3" stroke-width="4" fill="none" marker-end="url(#arrowHead)" stroke-dasharray="8 6"/>';
+  }
+  function buildSim(){
+    simSvg.setAttribute('viewBox','0 0 560 420');
+    let html = '';
+    html += '<defs><marker id="arrowHead" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">'+
+      '<path d="M0,0 L0,6 L9,3 z" fill="#8f9bb3"/></marker></defs>';
+    // MULAI
+    html += '<ellipse cx="100" cy="40" rx="72" ry="28" fill="#dcecff" stroke="#0B72E7" stroke-width="4"/>'+
+      '<rect x="30" y="24" width="140" height="22" rx="6" fill="white" stroke="#0B72E7" stroke-width="1.5"/>'+
+      '<text x="100" y="40" text-anchor="middle" font-size="14" font-weight="800" fill="#0B72E7">MULAI</text>';
+    html += arrow('arr1',100,68,100,102);
+    // Input
+    html += pill(100,130,180,46,'Input angka','#eef4ff','#6C5CE7');
+    html += arrow('arr2',100,153,100,190);
+    // Decision
+    html += diamond(100,235,200,90,'angka % 2 == 0 ?','#fff4e0','#F5A524');
+    // YA branch -> GENAP (kanan)
+    html += arrow('arr3',200,235,340,235);
+    html += '<rect x="195" y="210" width="34" height="20" rx="5" fill="white" stroke="#F5A524" stroke-width="1.5"/>'+
+      '<text x="212" y="224" text-anchor="middle" font-size="12" font-weight="800" fill="#F5A524">YA</text>';
+    html += pill(430,235,190,46,'Cetak: GENAP','#e3fbf1','#12B886');
+    // TIDAK branch -> GANJIL (bawah)
+    html += arrow('arr4',100,280,100,320);
+    html += '<rect x="106" y="285" width="52" height="20" rx="5" fill="white" stroke="#F5A524" stroke-width="1.5"/>'+
+      '<text x="132" y="299" text-anchor="middle" font-size="12" font-weight="800" fill="#F5A524">TIDAK</text>';
+    html += pill(100,348,190,46,'Cetak: GANJIL','#ffe9e9','#E5484D');
+    // Kedua cabang menuju SELESAI
+    html += '<path d="M430,258 L430,385 L155,385" stroke="#8f9bb3" stroke-width="4" fill="none" stroke-dasharray="8 6"/>';
+    html += '<path d="M100,371 L100,385 L155,385" stroke="#8f9bb3" stroke-width="4" fill="none" marker-end="url(#arrowHead)" stroke-dasharray="8 6"/>';
+    html += '<ellipse cx="215" cy="395" rx="60" ry="0"/>';
+    html += '<ellipse cx="230" cy="395" rx="64" ry="22" fill="#dcecff" stroke="#0B72E7" stroke-width="4"/>'+
+      '<rect x="175" y="384" width="110" height="22" rx="6" fill="white" stroke="#0B72E7" stroke-width="1.5"/>'+
+      '<text x="230" y="400" text-anchor="middle" font-size="13" font-weight="800" fill="#0B72E7">SELESAI</text>';
+    simSvg.innerHTML = html;
+  }
+  function runSim(){
+    playClick();
+    const val = parseInt(document.getElementById('simInput').value || '0',10);
+    const even = (val % 2 === 0);
+    const status = document.getElementById('simStatus');
+    const steps = [
+      'Langkah 1: MULAI',
+      'Langkah 2: Input angka = ' + val,
+      'Langkah 3: Cek kondisi angka % 2 == 0 ...',
+      even ? 'Kondisi BENAR (YA) → menuju cabang GENAP' : 'Kondisi SALAH (TIDAK) → menuju cabang GANJIL',
+      even ? 'Langkah 4: Cetak "GENAP"' : 'Langkah 4: Cetak "GANJIL"',
+      'Langkah 5: SELESAI'
+    ];
+    let i = 0;
+    status.textContent = steps[0];
+    const iv = setInterval(()=>{
+      i++;
+      if(i < steps.length){
+        status.textContent = steps[i];
+        if(i===3) playTone(600,0.15,'square',0);
+      } else {
+        clearInterval(iv);
+        playCorrect();
+      }
+    }, 700);
+  }
+  function resetSim(){
+    document.getElementById('simStatus').textContent = 'Masukkan angka lalu tekan "Jalankan Algoritma" untuk melihat alurnya.';
+    document.getElementById('simInput').value = 7;
+    playClick();
+  }
+
+  /* ============ EVALUASI ============ */
+  let score = {A:0,B:0,C:0};
+  let answeredA = 0, answeredC = 0;
+  function answerMCQ(qi, btn, correct){
+    const group = btn.parentElement.querySelectorAll('.opt-btn');
+    if(group[0].disabled) return;
+    group.forEach(b=>b.disabled=true);
+    if(correct){ btn.classList.add('correct'); score.A += 10; playCorrect(); }
+    else{
+      btn.classList.add('wrong'); playWrong();
+      group.forEach(b=>{ if(b.getAttribute('onclick').includes(',true)')) b.classList.add('correct'); });
+    }
+    answeredA++;
+    if(answeredA===3) document.getElementById('btnNextA').disabled = false;
+  }
+
+  const pairs = [
+    {term:'Algoritma', def:'Urutan langkah logis menyelesaikan masalah'},
+    {term:'Sekuensial', def:'Instruksi dijalankan berurutan tanpa lompatan'},
+    {term:'Percabangan', def:'Pemilihan jalur berdasarkan sebuah kondisi'},
+    {term:'Perulangan', def:'Mengulang instruksi selama syarat terpenuhi'}
+  ];
+  let selectedTerm = null, matchedCount = 0;
+  function shuffle(arr){ return arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]); }
+  function buildMatch(){
+    const left = document.getElementById('matchLeft');
+    const right = document.getElementById('matchRight');
+    left.innerHTML=''; right.innerHTML='';
+    pairs.forEach((p,idx)=>{
+      const b = document.createElement('button');
+      b.className='match-btn'; b.textContent=p.term; b.dataset.pair=idx;
+      b.onclick=()=>selectTerm(b,idx);
+      left.appendChild(b);
+    });
+    shuffle(pairs.map((p,idx)=>idx)).forEach(idx=>{
+      const b = document.createElement('button');
+      b.className='match-btn'; b.textContent=pairs[idx].def; b.dataset.pair=idx;
+      b.onclick=()=>selectDef(b,idx);
+      right.appendChild(b);
+    });
+    document.getElementById('matchSvg').innerHTML='';
+    selectedTerm=null; matchedCount=0;
+  }
+  function selectTerm(el,idx){
+    if(el.classList.contains('done')) return;
+    playClick();
+    document.querySelectorAll('#matchLeft .match-btn').forEach(b=>b.classList.remove('sel'));
+    el.classList.add('sel'); selectedTerm = {el,idx};
+  }
+  function selectDef(el,idx){
+    if(el.classList.contains('done') || !selectedTerm) return;
+    playClick();
+    if(selectedTerm.idx === idx){
+      selectedTerm.el.classList.remove('sel'); selectedTerm.el.classList.add('done');
+      el.classList.add('done');
+      drawMatchLine(selectedTerm.el, el);
+      score.B += 10; matchedCount++; playCorrect();
+      selectedTerm = null;
+      if(matchedCount===4) document.getElementById('btnNextB').disabled=false;
+    } else {
+      el.classList.add('wrong'); playWrong();
+      setTimeout(()=>{ el.classList.remove('wrong'); selectedTerm.el.classList.remove('sel'); selectedTerm=null; },380);
+    }
+  }
+  function drawMatchLine(termEl,defEl){
+    const area = document.getElementById('matchArea').getBoundingClientRect();
+    const a = termEl.getBoundingClientRect(); const b = defEl.getBoundingClientRect();
+    const x1=a.right-area.left, y1=a.top-area.top+a.height/2;
+    const x2=b.left-area.left, y2=b.top-area.top+b.height/2;
+    const svg = document.getElementById('matchSvg');
+    const len = Math.hypot(x2-x1,y2-y1);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+    line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+    line.setAttribute('stroke','#12B886'); line.setAttribute('stroke-width','4'); line.setAttribute('stroke-linecap','round');
+    line.setAttribute('stroke-dasharray',len); line.setAttribute('stroke-dashoffset',len);
+    svg.appendChild(line);
+    requestAnimationFrame(()=>{ line.style.transition='stroke-dashoffset .5s ease'; line.setAttribute('stroke-dashoffset','0'); });
+  }
+
+  function answerTF(qi, btn, val){
+    const answers = [true,false,true];
+    const row = btn.closest('.tf-row');
+    const btns = row.querySelectorAll('.tf-btn');
+    if(btns[0].disabled) return;
+    btns.forEach(b=>b.disabled=true);
+    if(val === answers[qi]){ btn.style.outline='3px solid #0b7a54'; score.C += 10; playCorrect(); }
+    else{ btn.style.outline='3px solid #a12227'; playWrong(); }
+    answeredC++;
+    if(answeredC===3) document.getElementById('btnNextC').disabled=false;
+  }
+
+  function goStage(name){
+    playClick();
+    document.querySelectorAll('.eval-stage').forEach(s=>s.classList.remove('active'));
+    document.getElementById('stage'+name).classList.add('active');
+    document.querySelectorAll('.eval-dot').forEach(d=>d.classList.remove('on'));
+    document.getElementById('dot'+name).classList.add('on');
+    if(name==='B') buildMatch();
+    if(name==='D'){
+      const total = score.A+score.B+score.C;
+      document.getElementById('recapScore').textContent = total+' / 100';
+      document.getElementById('recapA').textContent = 'Babak A: '+score.A+'/30';
+      document.getElementById('recapB').textContent = 'Babak B: '+score.B+'/40';
+      document.getElementById('recapC').textContent = 'Babak C: '+score.C+'/30';
+    }
+  }
+  function resetEval(){
+    playClick();
+    score={A:0,B:0,C:0}; answeredA=0; answeredC=0;
+    document.querySelectorAll('.opt-btn').forEach(b=>{b.disabled=false;b.classList.remove('correct','wrong');});
+    document.querySelectorAll('.tf-btn').forEach(b=>{b.disabled=false;b.style.outline='';});
+    document.getElementById('btnNextA').disabled=true;
+    document.getElementById('btnNextB').disabled=true;
+    document.getElementById('btnNextC').disabled=true;
+    goStage('A');
+  }
+  document.getElementById('dotA').classList.add('on');
+</script>
+</body>
+</html>
