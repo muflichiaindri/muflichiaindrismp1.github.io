@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MPI Informatika - Algoritma & Pemrograman | SMP Negeri 1 Sugio</title>
+  <style>
+    /* --- RESET & BASIC STYLES --- */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: url('bg-ruang-kelas.jpg') center/cover no-repeat fixed #f0f9ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Overlay semi-transparan untuk latar kelas */
+    .bg-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(240, 249, 255, 0.82);
+      z-index: 1;
+    }
+
+    /* PANGGUNG UTAMA 16:9 BEBAS SCROLL */
+    #stage-16-9 {
+      position: relative;
+      z-index: 2;
+      width: 100vw;
+      height: 56.25vw; /* 16:9 Aspect Ratio */
+      max-height: 100vh;
+      max-width: 177.78vh; /* 16:9 Aspect Ratio */
+      aspect-ratio: 16 / 9;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      border-radius: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: clamp(10px, 1.8vh, 18px);
+      font-size: calc(15px * var(--font-scale, 1.0));
+      color: #1e293b;
+    }
+
+    /* LAYOUT COMMON */
+    .page {
+      display: none;
+      width: 100%;
+      height: 100%;
+      flex-direction: column;
+      justify-content: space-between;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .page.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* HEADER & NAVIGASI ATAS */
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      height: clamp(48px, 7vh, 60px);
+      margin-bottom: 8px;
+    }
+
+    .school-capsule {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 4px 16px 4px 6px;
+      border-radius: 50px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border: 2px solid #3b82f6;
+    }
+
+    .school-logo {
+      height: clamp(38px, 5.5vh, 48px);
+      width: auto;
+      object-fit: contain;
+    }
+
+    .school-info h1 {
+      font-size: clamp(12px, 1.6vh, 15px);
+      font-weight: 800;
+      color: #1e3a8a;
+      line-height: 1.1;
+    }
+
+    .school-info p {
+      font-size: clamp(10px, 1.3vh, 12px);
+      color: #475569;
+      font-weight: 600;
+    }
+
+    .page-title-badge {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      padding: 6px 20px;
+      border-radius: 30px;
+      font-size: clamp(14px, 2vh, 18px);
+      font-weight: 800;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+      letter-spacing: 0.5px;
+    }
+
+    .nav-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .icon-btn {
+      width: clamp(36px, 4.8vh, 44px);
+      height: clamp(36px, 4.8vh, 44px);
+      border-radius: 50%;
+      border: none;
+      background: white;
+      color: #1e293b;
+      font-size: clamp(16px, 2.2vh, 20px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+      transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+      transform: scale(1.08);
+      background: #eff6ff;
+    }
+
+    .btn-nav-main {
+      background: #3b82f6;
+      color: white;
+      border-radius: 20px;
+      padding: 0 16px;
+      width: auto;
+      font-weight: 700;
+      font-size: clamp(12px, 1.6vh, 14px);
+      gap: 6px;
+    }
+
+    /* MODUL CONTAINER */
+    .content-area {
+      flex: 1;
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* FOOTER */
+    .app-footer {
+      height: clamp(24px, 3.5vh, 30px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: clamp(10px, 1.3vh, 12px);
+      font-weight: 600;
+      color: #475569;
+      border-top: 1px solid rgba(0,0,0,0.08);
+      padding-top: 4px;
+    }
+
+    /* --- HALAMAN 1: COVER --- */
+    #page-cover {
+      justify-content: space-between;
+      align-items: center;
+      text-align: center;
+    }
+
+    .cover-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+    }
+
+    .badge-tag {
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: clamp(12px, 1.8vh, 15px);
+      font-weight: 800;
+      margin-bottom: 12px;
+      border: 1px solid #bfdbfe;
+    }
+
+    .cover-title {
+      font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+      font-weight: 900;
+      color: #1e3a8a;
+      text-transform: uppercase;
+      line-height: 1.05;
+      text-shadow: 3px 3px 0px #ffffff, 5px 5px 0px #93c5fd;
+      margin-bottom: 8px;
+      letter-spacing: -1px;
+    }
+
+    .cover-subtitle {
+      font-size: clamp(1.2rem, 2.5vw, 2rem);
+      font-weight: 800;
+      color: #0284c7;
+      margin-bottom: 24px;
+    }
+
+    .btn-play-start {
+      width: clamp(70px, 10vh, 90px);
+      height: clamp(70px, 10vh, 90px);
+      border-radius: 50%;
+      background: linear-gradient(135deg, #22c55e, #15803d);
+      border: 4px solid white;
+      color: white;
+      font-size: clamp(28px, 4vh, 40px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4);
+      animation: pulseGlow 2s infinite;
+      transition: transform 0.2s;
+    }
+
+    .btn-play-start:hover {
+      transform: scale(1.12);
+    }
+
+    .start-label {
+      margin-top: 10px;
+      font-size: clamp(14px, 2vh, 18px);
+      font-weight: 800;
+      color: #15803d;
+      letter-spacing: 1px;
+    }
+
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+      70% { box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+
+    /* --- HALAMAN 2: DASHBOARD --- */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: clamp(10px, 1.8vh, 18px);
+      height: 100%;
+      padding: 10px 0;
+    }
+
+    .menu-card {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 20px;
+      padding: clamp(10px, 1.8vh, 16px);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      border: 2px solid #e2e8f0;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+      transition: all 0.25s ease;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-4px);
+      border-color: #3b82f6;
+      box-shadow: 0 12px 20px rgba(59, 130, 246, 0.15);
+      background: white;
+    }
+
+    .icon-box {
+      width: clamp(58px, 8vh, 76px);
+      height: clamp(58px, 8vh, 76px);
+      border-radius: 18px;
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(28px, 4vh, 38px);
+      flex-shrink: 0;
+    }
+
+    .menu-info h3 {
+      font-size: clamp(14px, 2vh, 18px);
+      font-weight: 800;
+      color: #1e3a8a;
+      margin-bottom: 4px;
+    }
+
+    .menu-info p {
+      font-size: clamp(11px, 1.4vh, 13px);
+      color: #64748b;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    /* --- HALAMAN 3: TUJUAN PEMBELAJARAN --- */
+    .tp-card {
+      background: white;
+      border-radius: 20px;
+      padding: clamp(16px, 3vh, 24px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+      border: 2px solid #e2e8f0;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .tp-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(10px, 1.8vh, 16px);
+    }
+
+    .tp-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      font-size: clamp(13px, 1.7vh, 16px);
+      font-weight: 600;
+      color: #334155;
+      line-height: 1.4;
+    }
+
+    .tp-badge {
+      background: #3b82f6;
+      color: white;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      flex-shrink: 0;
+      font-size: 13px;
+    }
+
+    /* --- HALAMAN 4: MATERI INTI --- */
+    .materi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: clamp(10px, 1.6vh, 16px);
+      height: 100%;
+    }
+
+    .materi-card {
+      background: white;
+      border-radius: 16px;
+      padding: clamp(12px, 1.8vh, 16px);
+      border: 2px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    }
+
+    .materi-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .materi-icon {
+      font-size: clamp(20px, 3vh, 28px);
+    }
+
+    .materi-title {
+      font-size: clamp(13px, 1.8vh, 16px);
+      font-weight: 800;
+      color: #1e3a8a;
+    }
+
+    .materi-body {
+      font-size: clamp(11.5px, 1.5vh, 13.5px);
+      font-weight: 600;
+      color: #475569;
+      line-height: 1.45;
+    }
+
+    /* --- HALAMAN 5: SIMULASI / LAB VIRTUAL SVG --- */
+    .sim-container {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 16px;
+      height: 100%;
+      align-items: center;
+    }
+
+    .sim-canvas-box {
+      background: white;
+      border-radius: 16px;
+      border: 2px solid #cbd5e1;
+      height: clamp(260px, 38vh, 420px);
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .sim-controls {
+      background: white;
+      border-radius: 16px;
+      padding: 16px;
+      border: 2px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .sim-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+
+    .sim-btn:hover { background: #1d4ed8; }
+    .sim-btn.secondary { background: #64748b; }
+    .sim-btn.secondary:hover { background: #475569; }
+
+    /* SVG Elements Styling */
+    .svg-node {
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    .svg-node:hover {
+      filter: drop-shadow(0 0 6px #3b82f6);
+    }
+
+    /* --- HALAMAN 6: EVALUASI --- */
+    .eval-box {
+      background: white;
+      border-radius: 20px;
+      padding: clamp(14px, 2.2vh, 20px);
+      border: 2px solid #e2e8f0;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .eval-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 8px;
+    }
+
+    .eval-stage-title {
+      font-size: clamp(13px, 1.8vh, 16px);
+      font-weight: 800;
+      color: #1e3a8a;
+    }
+
+    .eval-score-badge {
+      background: #fef08a;
+      color: #854d0e;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .eval-question {
+      font-size: clamp(13px, 1.8vh, 16px);
+      font-weight: 700;
+      color: #1e293b;
+      margin: 10px 0;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .option-btn {
+      background: #f8fafc;
+      border: 2px solid #cbd5e1;
+      padding: clamp(8px, 1.5vh, 12px) 14px;
+      border-radius: 12px;
+      font-size: clamp(12px, 1.6vh, 14px);
+      font-weight: 600;
+      color: #334155;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .option-btn:hover {
+      border-color: #3b82f6;
+      background: #eff6ff;
+    }
+
+    /* Menjodohkan Container */
+    .match-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      position: relative;
+    }
+
+    .match-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .match-item {
+      background: #f8fafc;
+      border: 2px solid #cbd5e1;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .match-item.selected {
+      border-color: #3b82f6;
+      background: #dbeafe;
+    }
+
+    .match-item.matched {
+      background: #dcfce7;
+      border-color: #22c55e;
+      color: #15803d;
+    }
+
+    /* --- HALAMAN 7: PROFIL GURU --- */
+    .profile-card {
+      background: white;
+      border-radius: 20px;
+      padding: clamp(16px, 3vh, 24px);
+      border: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .profile-img {
+      width: clamp(120px, 17vh, 160px);
+      height: clamp(120px, 17vh, 160px);
+      border-radius: 50%;
+      object-fit: cover;
+      border: 5px solid #3b82f6;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+      flex-shrink: 0;
+    }
+
+    .profile-details h2 {
+      font-size: clamp(18px, 2.8vh, 24px);
+      font-weight: 800;
+      color: #1e3a8a;
+      margin-bottom: 4px;
+    }
+
+    .profile-details h3 {
+      font-size: clamp(13px, 1.8vh, 16px);
+      color: #2563eb;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .profile-details p {
+      font-size: clamp(12px, 1.6vh, 14px);
+      color: #475569;
+      font-weight: 600;
+      line-height: 1.4;
+      margin-bottom: 6px;
+    }
+
+    .quote-box {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 8px 12px;
+      border-radius: 0 8px 8px 0;
+      font-style: italic;
+      margin-top: 10px;
+      font-size: clamp(11px, 1.5vh, 13px);
+      color: #1e40af;
+    }
+
+    /* MODAL POPUP (FAKTA MENARIK) */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 10;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-card {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      text-align: center;
+      border: 3px solid #3b82f6;
+    }
+
+    .modal-card h3 {
+      font-size: 20px;
+      color: #1e3a8a;
+      margin-bottom: 12px;
+    }
+
+    .modal-card p {
+      font-size: 14px;
+      color: #475569;
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-overlay"></div>
+
+  <!-- PANGGUNG 16:9 -->
+  <div id="stage-16-9">
+
+    <!-- HEADER RESMI -->
+    <header class="app-header">
+      <div class="school-capsule">
+        <img src="LOGO SMP N 1 SUGIO.jpg" alt="Logo Sekolah" class="school-logo" onerror="this.style.display='none'">
+        <div class="school-info">
+          <h1>SMP NEGERI 1 SUGIO</h1>
+          <p>Kurikulum Merdeka • Informatika Fase D</p>
+        </div>
+      </div>
+
+      <div id="header-page-title" class="page-title-badge" style="display: none;">
+        BERANDA
+      </div>
+
+      <div class="nav-controls">
+        <button class="icon-btn" onclick="toggleSound()" title="Suara ON/OFF" id="btn-sound">🔊</button>
+        <button class="icon-btn btn-nav-main" onclick="navigateTo('page-dashboard')" id="btn-home" style="display: none;">
+          🏠 Menu
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTAINER UTAMA MODUL -->
+    <main class="content-area">
+
+      <!-- ================= HALAMAN 1: COVER ================= -->
+      <section id="page-cover" class="page active">
+        <div class="cover-hero">
+          <div class="badge-tag">MEDIA PEMBELAJARAN INTERAKTIF (MPI)</div>
+          <h1 class="cover-title">ALGORITMA & PEMROGRAMAN</h1>
+          <div class="cover-subtitle">Membangun Logika & Problem Solving Digital</div>
+          
+          <button class="btn-play-start" onclick="playAudio('start'); navigateTo('page-dashboard')">
+            ▶
+          </button>
+          <div class="start-label">KLIK MULAI</div>
+        </div>
+      </section>
+
+      <!-- ================= HALAMAN 2: DASHBOARD ================= -->
+      <section id="page-dashboard" class="page">
+        <div class="dashboard-grid">
+          <div class="menu-card" onclick="navigateTo('page-tp')">
+            <div class="icon-box">🎯</div>
+            <div class="menu-info">
+              <h3>Tujuan Pembelajaran</h3>
+              <p>Capaian & indikator kompetensi siswa kelas VII.</p>
+            </div>
+          </div>
+
+          <div class="menu-card" onclick="navigateTo('page-materi')">
+            <div class="icon-box">📖</div>
+            <div class="menu-info">
+              <h3>Materi Pembelajaran</h3>
+              <p>Eksplorasi konsep algoritma & instruksi terstruktur.</p>
+            </div>
+          </div>
+
+          <div class="menu-card" onclick="navigateTo('page-simulasi')">
+            <div class="icon-box">🕹️</div>
+            <div class="menu-info">
+              <h3>Simulasi Interaktif</h3>
+              <p>Laboratorium virtual alur algoritma visual SVG.</p>
+            </div>
+          </div>
+
+          <div class="menu-card" onclick="navigateTo('page-evaluasi')">
+            <div class="icon-box">📝</div>
+            <div class="menu-info">
+              <h3>Evaluasi Formatif</h3>
+              <p>Uji pemahaman multi-format (Skor 100).</p>
+            </div>
+          </div>
+
+          <div class="menu-card" onclick="navigateTo('page-profil')">
+            <div class="icon-box">👨‍🏫</div>
+            <div class="menu-info">
+              <h3>Profil Guru</h3>
+              <p>Informasi pengembang media & fasilitator.</p>
+            </div>
+          </div>
+
+          <div class="menu-card" onclick="openFaktaModal()">
+            <div class="icon-box">💡</div>
+            <div class="menu-info">
+              <h3>Wawasan & Fakta</h3>
+              <p>Fakta unik sejarah algoritma & pemrograman.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= HALAMAN 3: TUJUAN PEMBELAJARAN ================= -->
+      <section id="page-tp" class="page">
+        <div class="tp-card">
+          <ul class="tp-list">
+            <li class="tp-item">
+              <span class="tp-badge">1</span>
+              <span>Peserta didik mampu <strong>menjelaskan konsep dasar algoritma</strong> dan pentingnya urutan instruksi logis dalam kehidupan sehari-hari.</span>
+            </li>
+            <li class="tp-item">
+              <span class="tp-badge">2</span>
+              <span>Peserta didik mampu <strong>merancang instruksi terstruktur</strong> (step-by-step) untuk memecahkan masalah secara efisien (*problem solving*).</span>
+            </li>
+            <li class="tp-item">
+              <span class="tp-badge">3</span>
+              <span>Peserta didik mampu <strong>menganalisis diagram alur (flowchart)</strong> sederhana menggunakan simbol-simbol standar pemrograman.</span>
+            </li>
+            <li class="tp-item">
+              <span class="tp-badge">4</span>
+              <span>Peserta didik mampu <strong>mensimulasikan eksekusi algoritma</strong> visual sebelum diterapkan dalam bahasa pemrograman.</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ================= HALAMAN 4: MATERI INTI ================= -->
+      <section id="page-materi" class="page">
+        <div class="materi-grid">
+          <div class="materi-card">
+            <div class="materi-header">
+              <span class="materi-icon">💡</span>
+              <span class="materi-title">Apa itu Algoritma?</span>
+            </div>
+            <div class="materi-body">
+              Algoritma adalah urutan langkah-langkah logis dan terstruktur yang disusun secara sistematis untuk menyelesaikan suatu masalah atau mencapai tujuan tertentu.
+            </div>
+          </div>
+
+          <div class="materi-card">
+            <div class="materi-header">
+              <span class="materi-icon">📑</span>
+              <span class="materi-title">Instruksi Terstruktur</span>
+            </div>
+            <div class="materi-body">
+              Setiap langkah dalam algoritma harus jelas, tidak ambigu, dan memiliki urutan yang pasti. Jika urutannya tertukar, hasil akhirnya bisa salah.
+            </div>
+          </div>
+
+          <div class="materi-card">
+            <div class="materi-header">
+              <span class="materi-icon">📊</span>
+              <span class="materi-title">Notasi Flowchart</span>
+            </div>
+            <div class="materi-body">
+              Flowchart adalah gambaran grafis dari langkah-langkah algoritma. Menggunakan simbol seperti Oval (Start/End), Persegi (Proses), dan Belah Ketupat (Keputusan).
+            </div>
+          </div>
+
+          <div class="materi-card">
+            <div class="materi-header">
+              <span class="materi-icon">🔀</span>
+              <span class="materi-title">Percabangan (Conditional)</span>
+            </div>
+            <div class="materi-body">
+              Struktur logika yang memungkinkan komputer memilih tindakan berdasarkan kondisi tertentu (Contoh: "JIKA hujan, MAKA pakai payung").
+            </div>
+          </div>
+
+          <div class="materi-card">
+            <div class="materi-header">
+              <span class="materi-icon">🔄</span>
+              <span class="materi-title">Pengulangan (Looping)</span>
+            </div>
+            <div class="materi-body">
+              Instruksi yang dijalankan berulang kali selama kondisi tertentu masih terpenuhi, menghemat penulisan kode berulang.
+            </div>
+          </div>
+
+          <div class="materi-card">
+            <div class="materi-header">
+              <span class="materi-icon">🧩</span>
+              <span class="materi-title">Pemrograman Visual</span>
+            </div>
+            <div class="materi-body">
+              Pemrograman berbasis blok (*block-based programming*) yang memudahkan pemula menyusun algoritma tanpa khawatir salah ketik sintaks.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= HALAMAN 5: SIMULASI INTERAKTIF ================= -->
+      <section id="page-simulasi" class="page">
+        <div class="sim-container">
+          <div class="sim-canvas-box">
+            <!-- CANVAS SVG ALGORITMA SIMULATOR -->
+            <svg id="sim-svg" width="100%" height="100%" viewBox="0 0 500 320">
+              <!-- Flowchart Lines -->
+              <path id="line1" d="M 250 55 L 250 100" stroke="#cbd5e1" stroke-width="4" marker-end="url(#arrow)" />
+              <path id="line2" d="M 250 150 L 250 190" stroke="#cbd5e1" stroke-width="4" />
+              <path id="line3" d="M 250 240 L 250 270" stroke="#cbd5e1" stroke-width="4" />
+
+              <!-- Arrow Marker -->
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+                </marker>
+              </defs>
+
+              <!-- Node 1: Start -->
+              <g class="svg-node" id="node-start">
+                <rect x="180" y="20" width="140" height="35" rx="17.5" fill="#22c55e" />
+                <rect x="195" y="27" width="110" height="21" rx="6" fill="white" />
+                <text x="250" y="42" font-size="13" font-weight="800" fill="#15803d" text-anchor="middle">MULAI</text>
+              </g>
+
+              <!-- Node 2: Process -->
+              <g class="svg-node" id="node-process">
+                <rect x="150" y="100" width="200" height="50" rx="8" fill="#3b82f6" />
+                <rect x="160" y="110" width="180" height="30" rx="6" fill="white" />
+                <text id="txt-process" x="250" y="130" font-size="13" font-weight="800" fill="#1e40af" text-anchor="middle">
+                  Input: Masukkan Air
+                </text>
+              </g>
+
+              <!-- Node 3: Condition -->
+              <g class="svg-node" id="node-condition">
+                <polygon points="250,180 340,215 250,250 160,215" fill="#f59e0b" />
+                <rect x="185" y="203" width="130" height="24" rx="6" fill="white" />
+                <text id="txt-condition" x="250" y="219" font-size="12" font-weight="800" fill="#b45309" text-anchor="middle">
+                  Apakah Mendidih?
+                </text>
+              </g>
+
+              <!-- Node 4: End -->
+              <g class="svg-node" id="node-end">
+                <rect x="180" y="270" width="140" height="35" rx="17.5" fill="#ef4444" />
+                <rect x="195" y="277" width="110" height="21" rx="6" fill="white" />
+                <text x="250" y="292" font-size="13" font-weight="800" fill="#991b1b" text-anchor="middle">SELESAI</text>
+              </g>
+
+              <!-- Running Indicator Light -->
+              <circle id="runner" cx="250" cy="37" r="8" fill="#facc15" style="display:none;" />
+            </svg>
+          </div>
+
+          <div class="sim-controls">
+            <h4 style="color:#1e3a8a; font-size:14px;">Kontrol Simulasi</h4>
+            <p style="font-size:12px; color:#64748b;">Jalankan simulasi untuk melihat eksekusi algoritma "Membuat Teh Panas" secara berurutan.</p>
+            
+            <button class="sim-btn" onclick="runSimulation()">
+              ▶ Jalankan Algoritma
+            </button>
+            <button class="sim-btn secondary" onclick="resetSimulation()">
+              🔄 Reset Diagram
+            </button>
+
+            <div id="sim-status" style="margin-top:10px; padding:8px; background:#f1f5f9; border-radius:8px; font-size:12px; font-weight:700; color:#334155; text-align:center;">
+              Status: Siap
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= HALAMAN 6: EVALUASI ================= -->
+      <section id="page-evaluasi" class="page">
+        <div class="eval-box">
+          <div class="eval-header">
+            <span class="eval-stage-title" id="eval-stage-label">Babak A: Pilihan Ganda (30 Poin)</span>
+            <span class="eval-score-badge">Skor: <span id="current-score">0</span> / 100</span>
+          </div>
+
+          <!-- EVAL CONTAINER DYNAMIC -->
+          <div id="eval-content" style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+            <!-- Quiz items render here via JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= HALAMAN 7: PROFIL GURU ================= -->
+      <section id="page-profil" class="page">
+        <div class="profile-card">
+          <img src="WhatsApp Image 2026-09-16 at 11.29.11.jpeg" alt="Foto Guru" class="profile-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'150\' height=\'150\'><circle cx=\'75\' cy=\'75\' r=\'70\' fill=\'%233b82f6\'/><text x=\'50%\' y=\'50%\' font-size=\'40\' fill=\'white\' text-anchor=\'middle\' dy=\'.3em\'>👨‍🏫</text></svg>'">
+          <div class="profile-details">
+            <h2>Muflichia Indri Khanifiana, S.Pd</h2>
+            <h3>Guru Mata Pelajaran Informatika</h3>
+            <p>📍 <strong>Instansi:</strong> SMP NEGERI 1 SUGIO</p>
+            <p>🎓 <strong>Pengembang:</strong> Media Pembelajaran Interaktif (MPI)</p>
+            <div class="quote-box">
+              "Pendidikan logika dan computational thinking sejak dini adalah kunci membentuk generasi pemecah masalah (*problem solver*) di era digital."
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="app-footer">
+      <span>Pengembang: <strong>Muflichia Indri Khanifiana, S.Pd</strong> — SMP NEGERI 1 SUGIO</span>
+      <span>Festival MPI Kurikulum Merdeka</span>
+    </footer>
+
+  </div>
+
+  <!-- POPUP MODAL FAKTA MENARIK -->
+  <div class="modal-overlay" id="fakta-modal">
+    <div class="modal-card">
+      <h3>💡 Tahukah Kamu?</h3>
+      <p>
+        Kata <strong>"Algoritma"</strong> berasal dari nama ilmuwan Muslim Persia bernama <strong>Muhammad ibn Musa al-Khwarizmi</strong> (780–850 M) yang menulis buku tentang langkah-langkah sistematis dalam menyelesaikan perhitungan matematis!
+      </p>
+      <button class="sim-btn" style="margin: 0 auto;" onclick="closeFaktaModal()">Tutup Wawasan</button>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT & AUDIO SYNTHESIZER -->
+  <script>
+    // --- STATE MANAGEMENT ---
+    let soundEnabled = true;
+    let currentScore = 0;
+    let evalStage = 'A'; // A: PG, B: Matching, C: TrueFalse, D: Result
+    let currentPgIdx = 0;
+
+    // AUDIO SYNTHESIZER (WEB AUDIO API - 100% OFFLINE)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playAudio(type) {
+      if (!soundEnabled) return;
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      const now = audioCtx.currentTime;
+
+      if (type === 'click') {
+        osc.frequency.setValueAtTime(450, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.08);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      } else if (type === 'correct') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now); // C5
+        osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+        osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.35);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      } else if (type === 'wrong') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.setValueAtTime(180, now + 0.12);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.25);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      } else if (type === 'start') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(330, now);
+        osc.frequency.exponentialRampToValueAtTime(660, now + 0.2);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.25);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      }
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      document.getElementById('btn-sound').innerText = soundEnabled ? '🔊' : '🔇';
+    }
+
+    // NAVIGATION SYSTEM
+    const pageTitles = {
+      'page-cover': '',
+      'page-dashboard': 'MENU UTAMA',
+      'page-tp': 'TUJUAN PEMBELAJARAN',
+      'page-materi': 'MATERI INTI',
+      'page-simulasi': 'SIMULASI INTERAKTIF',
+      'page-evaluasi': 'EVALUASI FORMATIF',
+      'page-profil': 'PROFIL GURU'
+    };
+
+    function navigateTo(pageId) {
+      playAudio('click');
+      document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+
+      const titleBadge = document.getElementById('header-page-title');
+      const homeBtn = document.getElementById('btn-home');
+
+      if (pageId === 'page-cover') {
+        titleBadge.style.display = 'none';
+        homeBtn.style.display = 'none';
+      } else {
+        titleBadge.style.display = 'block';
+        titleBadge.innerText = pageTitles[pageId] || '';
+        homeBtn.style.display = 'flex';
+      }
+
+      if (pageId === 'page-evaluasi') {
+        renderEvaluasi();
+      }
+    }
+
+    // MODAL FAKTA
+    function openFaktaModal() {
+      playAudio('click');
+      document.getElementById('fakta-modal').style.display = 'flex';
+    }
+    function closeFaktaModal() {
+      playAudio('click');
+      document.getElementById('fakta-modal').style.display = 'none';
+    }
+
+    // SIMULATOR ANIMATION
+    let simTimer = null;
+    function runSimulation() {
+      playAudio('click');
+      resetSimulation();
+
+      const runner = document.getElementById('runner');
+      const status = document.getElementById('sim-status');
+      runner.style.display = 'block';
+
+      status.innerText = "Status: Memulai algoritma...";
+
+      // Step 1: Start to Process
+      let step = 0;
+      simTimer = setInterval(() => {
+        step++;
+        if (step === 1) {
+          runner.setAttribute('cy', '37');
+          status.innerText = "Langkah 1: Menjalankan Start (Mulai)";
+        } else if (step === 2) {
+          runner.setAttribute('cy', '125');
+          status.innerText = "Langkah 2: Memproses Input Air";
+        } else if (step === 3) {
+          runner.setAttribute('cy', '215');
+          status.innerText = "Langkah 3: Memeriksa Kondisi 'Apakah Mendidih?'";
+        } else if (step === 4) {
+          runner.setAttribute('cy', '287');
+          status.innerText = "Langkah 4: Algoritma Selesai dengan Sukses!";
+          playAudio('correct');
+          clearInterval(simTimer);
+        }
+      }, 900);
+    }
+
+    function resetSimulation() {
+      if (simTimer) clearInterval(simTimer);
+      const runner = document.getElementById('runner');
+      runner.style.display = 'none';
+      runner.setAttribute('cy', '37');
+      document.getElementById('sim-status').innerText = "Status: Siap";
+    }
+
+    // EVALUASI MULTI-FORMAT DATA
+    const pgQuestions = [
+      {
+        q: "1. Urutan langkah-langkah logis yang disusun secara sistematis untuk menyelesaikan masalah disebut...",
+        opts: ["A. Variabel", "B. Algoritma", "C. Hardware", "D. Bug"],
+        ans: 1
+      },
+      {
+        q: "2. Simbol Flowchart berbentuk Belah Ketupat memiliki fungsi untuk...",
+        opts: ["A. Memulai program", "B. Melakukan Proses", "C. Pengambilan Keputusan", "D. Selesai"],
+        ans: 2
+      },
+      {
+        q: "3. Mana di bawah ini yang merupakan contoh instruksi terstruktur dalam kehidupan sehari-hari?",
+        opts: ["A. Membaca buku acak", "B. Resep langkah memasak mi", "C. Melamun di kelas", "D. Tidur siang"],
+        ans: 1
+      }
+    ];
+
+    function renderEvaluasi() {
+      const container = document.getElementById('eval-content');
+      document.getElementById('current-score').innerText = currentScore;
+
+      if (evalStage === 'A') {
+        document.getElementById('eval-stage-label').innerText = 'Babak A: Pilihan Ganda (30 Poin)';
+        const q = pgQuestions[currentPgIdx];
+        container.innerHTML = `
+          <div class="eval-question">${q.q}</div>
+          <div class="options-grid">
+            ${q.opts.map((opt, i) => `
+              <button class="option-btn" onclick="checkPgAnswer(${i})">${opt}</button>
+            `).join('')}
+          </div>
+        `;
+      } else if (evalStage === 'B') {
+        document.getElementById('eval-stage-label').innerText = 'Babak B: Menjodohkan Konsep (40 Poin)';
+        container.innerHTML = `
+          <div class="eval-question">Klik konsep di kiri, lalu klik pasangannya di sebelah kanan!</div>
+          <div class="match-container">
+            <div class="match-col">
+              <div class="match-item" id="left-0" onclick="selectMatch('left', 0)">Flowchart</div>
+              <div class="match-item" id="left-1" onclick="selectMatch('left', 1)">Looping</div>
+            </div>
+            <div class="match-col">
+              <div class="match-item" id="right-0" onclick="selectMatch('right', 0)">Pengulangan instruksi</div>
+              <div class="match-item" id="right-1" onclick="selectMatch('right', 1)">Diagram alur visual</div>
+            </div>
+          </div>
+          <button class="sim-btn" style="margin-top:15px; align-self:flex-end;" onclick="finishMatchStage()">Lanjut ke Babak C ▶</button>
+        `;
+      } else if (evalStage === 'C') {
+        document.getElementById('eval-stage-label').innerText = 'Babak C: Benar / Salah (30 Poin)';
+        container.innerHTML = `
+          <div class="eval-question">Pernyataan: "Urutan langkah dalam algoritma boleh tertukar tanpa mempengaruhi hasil akhir."</div>
+          <div style="display:flex; gap:20px; justify-content:center; margin-top:20px;">
+            <button class="sim-btn" style="background:#22c55e; padding:12px 30px; font-size:16px;" onclick="checkTrueFalse(false)">✓ BENAR</button>
+            <button class="sim-btn" style="background:#ef4444; padding:12px 30px; font-size:16px;" onclick="checkTrueFalse(true)">✗ SALAH</button>
+          </div>
+        `;
+      } else if (evalStage === 'D') {
+        document.getElementById('eval-stage-label').innerText = 'Hasil Rekapitulasi Evaluasi';
+        container.innerHTML = `
+          <div style="text-align:center; padding:20px;">
+            <div style="font-size:60px;">🏆</div>
+            <h2 style="color:#1e3a8a; font-size:24px; margin:10px 0;">Selamat! Evaluasi Selesai</h2>
+            <p style="font-size:18px; font-weight:800; color:#15803d; margin-bottom:20px;">Nilai Akhir Anda: ${currentScore} / 100</p>
+            <button class="sim-btn" style="margin:0 auto;" onclick="resetEvaluasi()">🔄 Ulangi Evaluasi</button>
+          </div>
+        `;
+      }
+    }
+
+    function checkPgAnswer(selectedIdx) {
+      const q = pgQuestions[currentPgIdx];
+      if (selectedIdx === q.ans) {
+        playAudio('correct');
+        currentScore += 10;
+      } else {
+        playAudio('wrong');
+      }
+
+      currentPgIdx++;
+      if (currentPgIdx >= pgQuestions.length) {
+        evalStage = 'B';
+      }
+      renderEvaluasi();
+    }
+
+    let selectedLeft = null;
+    let matchPairs = { 0: 1, 1: 0 }; // left 0 -> right 1, left 1 -> right 0
+
+    function selectMatch(side, idx) {
+      playAudio('click');
+      if (side === 'left') {
+        if (selectedLeft !== null) document.getElementById(`left-${selectedLeft}`).classList.remove('selected');
+        selectedLeft = idx;
+        document.getElementById(`left-${idx}`).classList.add('selected');
+      } else if (side === 'right' && selectedLeft !== null) {
+        if (matchPairs[selectedLeft] === idx) {
+          playAudio('correct');
+          currentScore += 20;
+          document.getElementById(`left-${selectedLeft}`).classList.add('matched');
+          document.getElementById(`right-${idx}`).classList.add('matched');
+        } else {
+          playAudio('wrong');
+        }
+        document.getElementById(`left-${selectedLeft}`).classList.remove('selected');
+        selectedLeft = null;
+      }
+    }
+
+    function finishMatchStage() {
+      playAudio('click');
+      evalStage = 'C';
+      renderEvaluasi();
+    }
+
+    function checkTrueFalse(isCorrect) {
+      if (isCorrect) {
+        playAudio('correct');
+        currentScore += 30;
+      } else {
+        playAudio('wrong');
+      }
+      evalStage = 'D';
+      renderEvaluasi();
+    }
+
+    function resetEvaluasi() {
+      playAudio('click');
+      currentScore = 0;
+      currentPgIdx = 0;
+      evalStage = 'A';
+      renderEvaluasi();
+    }
+  </script>
+</body>
+</html>
